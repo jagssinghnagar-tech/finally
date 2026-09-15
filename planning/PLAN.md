@@ -453,4 +453,34 @@ The container is designed to deploy to AWS App Runner, Render, or any container 
 - Sell shares: cash increases, position updates or disappears
 - Portfolio visualization: heatmap renders with correct colors, P&L chart has data points
 - AI chat (mocked): send a message, receive a response, trade execution appears inline
-- SSE resilience: disconnect and verify reconnection
+
+---
+
+## 13. Doc Review — Questions, Clarifications, Simplification Opportunities
+
+*Added by automated doc review, 2026-09-14. Non-binding — flags items for the team/agents to resolve, doesn't change existing behavior.*
+
+### Open Questions
+
+- **§6 Simulator vs. §9 LLM context — price staleness**: the SSE stream pushes ticker/price/prev/timestamp at ~500ms, but chat context (§9 step 1) says it loads "live prices" for the watchlist. Does chat read from the same in-memory price cache directly, or does it need its own accessor? Worth stating explicitly since it's the one place two subsystems (SSE + chat) both read the cache.
+ANSWER: Yes. both use same cache.
+- **§8 `/api/portfolio/trade` validation errors**: what HTTP status/shape does a rejected manual trade (insufficient cash/shares) return? §9 covers the LLM-initiated trade failure path (error surfaces in chat text), but the manual trade-bar path isn't specified — frontend needs a defined error contract to show something other than a silent failure.
+ANSWER: Take best recommendation from your end.
+RECOMMENDATION: HTTP 400 with `{"error": "insufficient_cash" | "insufficient_shares", "message": "..."}`; frontend shows an inline error near the trade bar.
+- **§7 `positions` table and zero-quantity**: when a sell fully closes a position, is the row deleted or kept at `quantity=0`? Affects the heatmap/positions-table queries and whether "position disappears" (§12 E2E scenario) means a DB delete or a frontend filter.
+ANSWER: Take best recommendation from your end.
+RECOMMENDATION: Delete the row when quantity reaches 0. Simplifies heatmap/positions-table queries (no filtering needed); `trades` remains the historical record.
+- **§8 watchlist tickers with no price yet**: if a ticker is added to the watchlist that the simulator hasn't generated a seed price for (or Massive hasn't returned data for), what does `GET /api/watchlist` return for `price`? Null, 0, or does the simulator eagerly seed on add?
+ANSWER: Take best recommendation from your end.
+RECOMMENDATION: Simulator eagerly seeds a starting price synchronously when a ticker is added, so the watchlist endpoint always returns a real price — no null-handling needed on the frontend.
+- **§9 chat rate limiting / concurrency**: is there any guard against the user firing multiple `/api/chat` requests before the previous one resolves (e.g., double trade execution)? Not mentioned — worth a one-line note even if the answer is "no, out of scope."
+ANSWER: Take best recommendation from your end.
+RECOMMENDATION: Serialize per-user chat requests — reject a second concurrent `/api/chat` call with HTTP 429 while one is in flight. Cheap insurance against double trade execution.
+- **§6 Massive polling union**: "polls for the union of all watched tickers" — union across what, given it's single-user? Presumably just "current watchlist," but the wording implies multiple sources being unioned. Minor wording clarity.
+ANSWER: Take best recommendation from your end.
+RECOMMENDATION: Reword to "polls for all tickers currently on the watchlist" — drop "union" since there's only one source in the single-user model.
+- **§11 volume path**: the example `docker run` mounts `-v finally-data:/app/db` (a named volume), but §4 describes `db/` as a bind-mounted project directory ("volume-mounted for persistence... maps to `/app/db`"). These are two different persistence mechanisms (named volume vs. bind mount) — pick one and make §4 and §11 consistent, since start/stop scripts need to match whichever is chosen.
+ANSWER: Take best recommendation from your end.
+RECOMMENDATION: Use the bind mount (`-v ./db:/app/db` or `-v "$(pwd)/db:/app/db"`), matching §4's description of `db/` as a real project-root directory with `.gitkeep`. Lets students inspect/back up the SQLite file directly. Update §11's example command accordingly.
+
+

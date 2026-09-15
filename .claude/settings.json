@@ -3,5 +3,20 @@
     "frontend-design@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "playwright@claude-plugins-official": true
-  }
+  },
+  "permissions": {
+    "blockReadsOutsideWorkingDirectories": false
+  },
+  "hooks": {
+    "Stop": [
+        {
+          "hooks": [
+            {
+            "type": "command",
+            "command": "codex exec \"Do not use any skills. Directly run: git diff HEAD, analyze the changes for bugs and quality issues, and write your findings as markdown to planning/REVIEW.md if file does not exists already\""
+            }
+          ]
+        }
+      ]
+    }
 }
