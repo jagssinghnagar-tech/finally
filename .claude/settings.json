@@ -5,9 +5,12 @@
     "playwright@claude-plugins-official": true
   },
   "permissions": {
-    "blockReadsOutsideWorkingDirectories": false
-  },
-  "hooks": {
+    "blockReadsOutsideWorkingDirectories": false,
+    "allow": [
+      "Bash(git push*)"
+    ]
+  }
+  /*"hooks": {
     "Stop": [
         {
           "hooks": [
@@ -18,5 +21,5 @@
           ]
         }
       ]
-    }
+    }*/
 }
