@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.env
+db/*.db
+**/node_modules
+**/.next
+**/out
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+planning
+test
+"test remote"

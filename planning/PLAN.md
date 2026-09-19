@@ -393,10 +393,10 @@ FastAPI serves the static frontend files and all API routes on port 8000.
 
 ### Docker Volume
 
-The SQLite database persists via a named Docker volume:
+The SQLite database persists via a bind mount of the project's `db/` directory:
 
 ```bash
-docker run -v finally-data:/app/db -p 8000:8000 --env-file .env finally
+docker run -v "$(pwd)/db:/app/db" -p 8000:8000 --env-file .env finally
 ```
 
 The `db/` directory in the project root maps to `/app/db` in the container. The backend writes `finally.db` to this path.

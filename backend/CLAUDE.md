@@ -57,3 +57,7 @@ uv run --extra dev ruff check app/ tests/ # Lint
 ```bash
 uv run market_data_demo.py   # Live terminal dashboard with simulated prices
 ```
+
+## LLM Model
+
+`app/llm/chat.py` uses `openrouter/openai/gpt-oss-120b` (Cerebras provider) by default. Set `LLM_MODEL` (e.g. a `:free` OpenRouter model) to override; the Cerebras provider pin applies only to the default. `.env` in the project root is loaded at startup (real env vars win). If the LLM call fails, nothing is persisted to chat history.

@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { background: #0d1117; color: #d5dde8; height: 100%; }
+body { font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; }
+.tabular-nums { font-variant-numeric: tabular-nums; font-family: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace; }
+
+@layer components {
+  .panel { @apply min-h-0 border border-line bg-panel; }
+  .panel-title { @apply border-b border-line px-3 py-1.5 text-xs font-medium text-dim; }
+  .field { @apply rounded-sm border border-line bg-bg px-2 py-1 text-sm text-ink outline-none focus:border-blue; }
+  .btn { @apply rounded-sm px-3 py-1 text-sm font-medium disabled:opacity-50; }
+}
+.price-cell { padding: 1px 4px; border-radius: 2px; transition: background-color 500ms ease-out; }
+.price-cell.flash-up { background-color: rgba(46, 204, 113, 0.35); transition: none; }
+.price-cell.flash-down { background-color: rgba(240, 72, 62, 0.35); transition: none; }
+.dots::after { content: "..."; animation: dots 1.2s steps(4) infinite; display: inline-block; width: 1.2em; overflow: hidden; vertical-align: bottom; }
+@keyframes dots { 0% { width: 0 } 100% { width: 1.2em } }
+:focus-visible { outline: 2px solid #209dd7; outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { .price-cell, .dots::after { transition: none; animation: none; } }
