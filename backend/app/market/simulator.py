@@ -60,6 +60,7 @@ class GBMSimulator:
         self._tickers: list[str] = []
         self._prices: dict[str, float] = {}
         self._params: dict[str, dict[str, float]] = {}
+        self._start_prices: dict[str, float] = {}  # Session baseline (~previous close)
 
         # Cholesky decomposition of the correlation matrix (for correlated moves)
         self._cholesky: np.ndarray | None = None
@@ -131,11 +132,16 @@ class GBMSimulator:
         self._tickers.remove(ticker)
         del self._prices[ticker]
         del self._params[ticker]
+        del self._start_prices[ticker]
         self._rebuild_cholesky()
 
     def get_price(self, ticker: str) -> float | None:
         """Current price for a ticker, or None if not tracked."""
         return self._prices.get(ticker)
+
+    def get_start_price(self, ticker: str) -> float | None:
+        """Price the ticker started the session at (used as previous close)."""
+        return self._start_prices.get(ticker)
 
     def get_tickers(self) -> list[str]:
         """Return the list of currently tracked tickers."""
@@ -149,6 +155,7 @@ class GBMSimulator:
             return
         self._tickers.append(ticker)
         self._prices[ticker] = SEED_PRICES.get(ticker, random.uniform(50.0, 300.0))
+        self._start_prices[ticker] = self._prices[ticker]
         self._params[ticker] = TICKER_PARAMS.get(ticker, dict(DEFAULT_PARAMS))
 
     def _rebuild_cholesky(self) -> None:
@@ -225,7 +232,9 @@ class SimulatorDataSource(MarketDataSource):
         for ticker in tickers:
             price = self._sim.get_price(ticker)
             if price is not None:
-                self._cache.update(ticker=ticker, price=price)
+                self._cache.update(
+                    ticker=ticker, price=price, previous_close=self._sim.get_start_price(ticker)
+                )
         self._task = asyncio.create_task(self._run_loop(), name="simulator-loop")
         logger.info("Simulator started with %d tickers", len(tickers))
 
@@ -245,7 +254,9 @@ class SimulatorDataSource(MarketDataSource):
             # Seed cache immediately so the ticker has a price right away
             price = self._sim.get_price(ticker)
             if price is not None:
-                self._cache.update(ticker=ticker, price=price)
+                self._cache.update(
+                    ticker=ticker, price=price, previous_close=self._sim.get_start_price(ticker)
+                )
             logger.info("Simulator: added ticker %s", ticker)
 
     async def remove_ticker(self, ticker: str) -> None:

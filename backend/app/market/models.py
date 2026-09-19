@@ -14,6 +14,7 @@ class PriceUpdate:
     price: float
     previous_price: float
     timestamp: float = field(default_factory=time.time)  # Unix seconds
+    previous_close: float | None = None  # Prior session close; baseline for daily change
 
     @property
     def change(self) -> float:
@@ -26,6 +27,13 @@ class PriceUpdate:
         if self.previous_price == 0:
             return 0.0
         return round((self.price - self.previous_price) / self.previous_price * 100, 4)
+
+    @property
+    def day_change_percent(self) -> float | None:
+        """Percent change vs the prior session close, or None if unknown."""
+        if not self.previous_close:
+            return None
+        return round((self.price - self.previous_close) / self.previous_close * 100, 4)
 
     @property
     def direction(self) -> str:
@@ -46,4 +54,6 @@ class PriceUpdate:
             "change": self.change,
             "change_percent": self.change_percent,
             "direction": self.direction,
+            "previous_close": self.previous_close,
+            "day_change_percent": self.day_change_percent,
         }
